@@ -251,7 +251,7 @@ public:
         return;
     }
 
-    zim::Uuid getUuid()
+    zim::Uuid getUuid() const
     {
         return fileUid;
     }
