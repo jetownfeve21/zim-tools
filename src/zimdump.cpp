@@ -263,7 +263,7 @@ void ZimDumper::dumpFiles(const std::string& directory)
 #else
       ::mkdir(d.c_str(), 0777);
 #endif
-    std::string t = it->getTitle();
+    std::string t = it->getUrl();
     std::string::size_type p;
     while ((p = t.find('/')) != std::string::npos)
       t.replace(p, 1, "%2f");
@@ -276,7 +276,18 @@ void ZimDumper::dumpFiles(const std::string& directory)
     }
     std::string f = d + '/' + t;
     std::ofstream out(f.c_str());
-    out << it->getData();
+    if (it->isRedirect())
+    {
+        std::ostringstream ss;
+        ss <<  "<meta http-equiv=\"refresh\" content=\"0\"; url=\"";
+        ss << it->getRedirectArticle().getUrl();
+        ss << "\" />";
+        out << ss.str();
+    }
+    else
+    {
+        out << it->getData();
+    }
     if (!out)
       throw std::runtime_error("error writing file " + f);
   }
