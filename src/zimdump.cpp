@@ -30,6 +30,36 @@
 #include "arg.h"
 #include "version.h"
 
+inline static bool isunreserved(unsigned char in)
+{
+    if ( (in >= '0' && in <= '9') || (in >= 'a' && in <= 'z') || (in >= 'A' && in <= 'Z') ||
+          in == '-' || in == '.' || in == '-' || in == '~' )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+static inline std::string urlencode(std::string s)
+{
+    std::stringstream urlencoded;
+    for (unsigned int i = 0; i < s.size(); i++)
+    {
+        auto c = s[i];
+        if (isunreserved(c))
+        {
+            urlencoded << c;
+        }
+        else
+        {
+           urlencoded << '%';
+           urlencoded << std::hex << (int) c;
+        }
+    }
+    return urlencoded.str();
+}
+
 class ZimDumper
 {
     zim::File file;
@@ -258,11 +288,14 @@ void ZimDumper::dumpFiles(const std::string& directory)
   {
     std::string d = directory + '/' + it->getNamespace();
     if (ns.find(it->getNamespace()) == ns.end())
+    {
 #if defined(_WIN32)
       ::mkdir(d.c_str());
 #else
       ::mkdir(d.c_str(), 0777);
 #endif
+        ns.insert(it->getNamespace());
+    }
     std::string t = it->getUrl();
     std::string::size_type p;
     while ((p = t.find('/')) != std::string::npos)
@@ -280,7 +313,7 @@ void ZimDumper::dumpFiles(const std::string& directory)
     {
         std::ostringstream ss;
         ss <<  "<meta http-equiv=\"refresh\" content=\"0\"; url=\"";
-        ss << it->getRedirectArticle().getUrl();
+        ss << urlencode(it->getRedirectArticle().getUrl());
         ss << "\" />";
         out << ss.str();
     }
